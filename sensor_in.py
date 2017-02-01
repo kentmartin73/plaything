@@ -16,7 +16,7 @@ import time
 
 client = Elasticsearch()
 
-server_api_key = sys.argv[1]
+server_api_keys = sys.argv[1:]
 
 app = Flask(__name__)
 
@@ -59,9 +59,14 @@ def incoming():
         sys.stderr.flush()
         return error_content, status.HTTP_417_EXPECTATION_FAILED
 
-    if client_api_key != server_api_key:
+    if not client_api_key in server_api_keys:
         error_content = "API key invalid\n"
         return error_content, status.HTTP_401_UNAUTHORIZED
+
+    if client_api_key == "vsk":
+        customer = "Chess"
+    else:
+        customer = client_api_key
 
     # T1 = Boiler case temperature, it will get hot if central heating or hot water needs energy
     # T2 = Central heating output water temperature
@@ -79,7 +84,8 @@ def incoming():
     if sensor_name == "T5":
         sensor_name = "Room"
 
-    sys.stderr.write("\n")
+    sys.stderr.write(customer)
+    sys.stderr.write(": ")
     sys.stderr.write(sensor_name)
     sys.stderr.write("\n")
     # Build something to store
@@ -87,6 +93,7 @@ def incoming():
     when = datetime.datetime.utcnow().isoformat()
     store_me = {}
     store_me['when'] = when
+    store_me['customer'] = customer
     store_me['sensor_name'] = sensor_name
     store_me['sensor_value'] = sensor_value
     #store_me_body = json.dumps(store_me)
