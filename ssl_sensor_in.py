@@ -11,10 +11,12 @@ from elasticsearch_dsl import Search, Q
 import json
 import time
 
-#def pp_json(data):
-#    print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
+def pp_json(data):
+    print json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
 
 client = Elasticsearch()
+
+
 
 server_api_key = sys.argv[1]
 
@@ -23,10 +25,12 @@ app = Flask(__name__)
 @app.route('/', methods=['GET'])
 def incoming():
     have_error = False
-    client_api_key = request.args.get("a")
-    sensor_name = request.args.get("n")
-    sensor_value = request.args.get("v")
-
+    client_api_key = request.args.get("api_key")
+    sensor_name = request.args.get("sensor_name")
+    sensor_value = request.args.get("sensor_value")
+    #if client_api_key != server_api_key:
+    #    content = {'invalid api key': 'please enter a valid one'}
+    #    return content, status.HTTP_401_UNAUTHORIZED
     error_content = ""
     if not client_api_key:
         sys.stderr.write("\n\n")
@@ -63,25 +67,6 @@ def incoming():
         error_content = "API key invalid\n"
         return error_content, status.HTTP_401_UNAUTHORIZED
 
-    # T1 = Boiler case temperature, it will get hot if central heating or hot water needs energy
-    # T2 = Central heating output water temperature
-    # T3 = Central heating radiator return water temperature
-    # T4 = Mains water feed temperature (goes cold every time someone runs the water)
-    # T5 = Room temp (affected by boiler so its the warmest room in the house)
-    if sensor_name == "T1":
-        sensor_name = "Boiler case"
-    if sensor_name == "T2":
-        sensor_name = "Central heating output"
-    if sensor_name == "T3":
-        sensor_name = "Central heating return"
-    if sensor_name == "T4":
-        sensor_name = "Mains feed"
-    if sensor_name == "T5":
-        sensor_name = "Room"
-
-    sys.stderr.write("\n")
-    sys.stderr.write(sensor_name)
-    sys.stderr.write("\n")
     # Build something to store
     id =  int(time.time())
     when = datetime.datetime.utcnow().isoformat()
